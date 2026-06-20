@@ -1,1 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GCSE Chemistry Quiz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=Inter:wght@400;500&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F7F5F0;
+    --surface: #FFFFFF;
+    --ink: #1C2541;
+    --ink-soft: #5B6178;
+    --teal: #0F9D8C;
+    --teal-dim: #DCEFEC;
+    --coral: #E2543A;
+    --coral-dim: #FAE3DE;
+    --amber: #E8A33D;
+    --border: #DDD9CC;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .app {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 4rem;
+  }
+  header { text-align: center; margin-bottom: 2rem; }
+  .eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--teal);
+    margin: 0 0 0.5rem;
+  }
+  h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 28px;
+    margin: 0 0 0.4rem;
+    letter-spacing: -0.01em;
+  }
+  .subtitle { color: var(--ink-soft); font-size: 14px; margin: 0; }
 
+  .rack {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    margin: 2rem 0 2.5rem;
+    flex-wrap: wrap;
+  }
+  .tube {
+    width: 24px;
+    height: 44px;
+    border: 1.5px solid var(--border);
+    border-radius: 4px 4px 10px 10px;
+    background: var(--surface);
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .tube.current { border-color: var(--amber); border-width: 2px; }
+  .tube-fill {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 0%;
+    background: var(--border);
+  }
+  .tube.correct .tube-fill { height: 100%; background: var(--teal); }
+  .tube.incorrect .tube-fill { height: 100%; background: var(--coral); }
+  @media (prefers-reduced-motion: no-preference) {
+    .tube-fill { transition: height 0.4s ease; }
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.75rem 1.5rem;
+  }
+  .qmeta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin: 0 0 0.9rem;
+  }
+  .qtext {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 19px;
+    line-height: 1.4;
+    margin: 0 0 1.4rem;
+  }
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-align: left;
+    width: 100%;
+    padding: 0.8rem 1rem;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .option:hover:not(:disabled) { border-color: var(--ink-soft); }
+  .option:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+  .option:disabled { cursor: default; }
+  .option .tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: var(--ink-soft);
+  }
+  .option.is-correct { background: var(--teal-dim); border-color: var(--teal); }
+  .option.is-correct .tag { background: var(--teal); border-color: var(--teal); color: #fff; }
+  .option.is-wrong { background: var(--coral-dim); border-color: var(--coral); }
+  .option.is-wrong .tag { background: var(--coral); border-color: var(--coral); color: #fff; }
+
+  .explain {
+    margin-top: 1.1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--ink-soft);
+  }
+  .explain strong { color: var(--ink); font-weight: 500; }
+
+  .nextbtn, .primary {
+    margin-top: 1.4rem;
+    width: 100%;
+    padding: 0.85rem;
+    border: none;
+    border-radius: 10px;
+    background: var(--ink);
+    color: #fff;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 15px;
+    cursor: pointer;
+  }
+  .nextbtn:hover, .primary:hover { background: #2A3458; }
+  .nextbtn:focus-visible, .primary:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+
+  .start { text-align: center; }
+  .start p { color: var(--ink-soft); font-size: 14px; line-height: 1.6; margin: 0 0 1.5rem; }
+
+  .score-display {
+    text-align: center;
+    padding: 1.5rem 0 0.5rem;
+  }
+  .score-num {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 52px;
+    line-height: 1;
+    margin: 0;
+  }
+  .score-frac { font-size: 18px; color: var(--ink-soft); font-weight: 400; }
+  .score-tier {
+    font-size: 14px;
+    color: var(--ink-soft);
+    margin: 0.6rem 0 0;
+  }
+  .review {
+    margin-top: 1.8rem;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .review-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--ink-soft);
+    padding: 8px 0;
+    border-top: 1px solid var(--border);
+  }
+  .review-item .mark {
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    margin-top: 1px;
+  }
+  .review-item.ok .mark { background: var(--teal); }
+  .review-item.bad .mark { background: var(--coral); }
+  .review-item span.qline { color: var(--ink); }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <p class="eyebrow">GCSE chemistry</p>
+    <h1>Bonding, reactions &amp; tests</h1>
+    <p class="subtitle">10 questions · multiple choice</p>
+  </header>
+
+  <div class="rack" id="rack"></div>
+  <div class="card" id="card"></div>
+</div>
+
+<script>
+  var questions = [
+    {
+      q: "Which of the following statements correctly explains why solid sodium chloride cannot conduct electricity?",
+      options: [
+        "Sodium chloride has free moving electrons",
+        "The ions in sodium chloride are held together in a fixed giant lattice structure",
+        "The ionic bonds in solid sodium chloride are weak",
+        "Sodium chloride contains delocalised electrons"
+      ],
+      correct: 1,
+      explain: "In a solid, ions are locked in fixed positions in the lattice and can't move to carry charge. Once molten or dissolved in water, the ions are free to move and the substance can conduct."
+    },
+    {
+      q: "What is the catalyst for fermentation?",
+      options: ["Glucose", "Ethanol", "Yeast", "Oxygen"],
+      correct: 2,
+      explain: "Yeast contains enzymes that catalyse the breakdown of glucose into ethanol and carbon dioxide."
+    },
+    {
+      q: "Which of the following is produced when a metal reacts with an acid?",
+      options: ["Metal oxide", "Metal hydroxide", "Oxygen", "Hydrogen"],
+      correct: 3,
+      explain: "Metal + acid → salt + hydrogen. A salt is also formed, but hydrogen is the only gas released."
+    },
+    {
+      q: "What is the chemical test for water?",
+      options: [
+        "Limewater turns cloudy",
+        "A glowing splint relights",
+        "Anhydrous copper sulfate turns from white to blue",
+        "A lit splint makes a squeaky pop"
+      ],
+      correct: 2,
+      explain: "White anhydrous copper sulfate turns blue in the presence of water. To confirm the water is pure, you'd also check its boiling point is exactly 100°C."
+    },
+    {
+      q: "What is the test for carbon dioxide gas?",
+      options: [
+        "Limewater turns cloudy",
+        "A glowing splint relights",
+        "A lit splint makes a squeaky pop",
+        "Damp red litmus paper turns blue"
+      ],
+      correct: 0,
+      explain: "Bubbling carbon dioxide through limewater (calcium hydroxide solution) turns it cloudy, due to the formation of insoluble calcium carbonate."
+    },
+    {
+      q: "What is the test for oxygen gas?",
+      options: [
+        "A lit splint makes a squeaky pop",
+        "A glowing splint relights",
+        "Limewater turns cloudy",
+        "Damp litmus paper bleaches white"
+      ],
+      correct: 1,
+      explain: "Oxygen relights a glowing splint because it supports combustion."
+    },
+    {
+      q: "What is the test for hydrogen gas?",
+      options: [
+        "A glowing splint relights",
+        "Limewater turns cloudy",
+        "A lit splint makes a squeaky pop",
+        "Turns universal indicator red"
+      ],
+      correct: 2,
+      explain: "Hydrogen burns rapidly when a lit splint is placed at the mouth of the test tube, producing a characteristic squeaky pop."
+    },
+    {
+      q: "What is the pH value of a neutral solution?",
+      options: ["0", "7", "10", "14"],
+      correct: 1,
+      explain: "A pH of 7 is neutral — below 7 is acidic, above 7 is alkaline."
+    },
+    {
+      q: "Which of these metals is the most reactive?",
+      options: ["Magnesium", "Calcium", "Potassium", "Sodium"],
+      correct: 2,
+      explain: "In the reactivity series, potassium sits above sodium, calcium and magnesium — it's one of the most reactive metals."
+    },
+    {
+      q: "During electrolysis, what type of reaction takes place at the cathode (negative electrode)?",
+      options: ["Oxidation", "Reduction", "Neutralisation", "Combustion"],
+      correct: 1,
+      explain: "Positive ions gain electrons at the cathode — this is reduction. (OIL RIG: Oxidation Is Loss, Reduction Is Gain.)"
+    }
+  ];
+
+  var current = -1;
+  var answers = new Array(questions.length).fill(null);
+  var card = document.getElementById('card');
+  var rack = document.getElementById('rack');
+
+  function buildRack() {
+    rack.innerHTML = '';
+    for (var i = 0; i < questions.length; i++) {
+      var t = document.createElement('div');
+      t.className = 'tube';
+      t.id = 'tube-' + i;
+      var fill = document.createElement('div');
+      fill.className = 'tube-fill';
+      t.appendChild(fill);
+      rack.appendChild(t);
+    }
+  }
+
+  function updateRack() {
+    for (var i = 0; i < questions.length; i++) {
+      var t = document.getElementById('tube-' + i);
+      if (!t) continue;
+      t.className = 'tube';
+      if (i === current) t.classList.add('current');
+      if (answers[i] !== null) {
+        t.classList.add(answers[i] === questions[i].correct ? 'correct' : 'incorrect');
+      }
+    }
+  }
+
+  function renderStart() {
+    card.innerHTML =
+      '<div class="start">' +
+      '<p class="qmeta">10 questions</p>' +
+      '<p class="qtext" style="margin-bottom:0.6rem;">Ready to test your chemistry?</p>' +
+      '<p>Covers ionic bonding, fermentation, reactions with acids, gas tests and more. Answer each question, then see your full score and a breakdown at the end.</p>' +
+      '<button class="primary" id="start-btn">Start quiz</button>' +
+      '</div>';
+    document.getElementById('start-btn').addEventListener('click', function () {
+      current = 0;
+      updateRack();
+      renderQuestion();
+    });
+  }
+
+  function renderQuestion() {
+    var item = questions[current];
+    var letters = ['A', 'B', 'C', 'D'];
+    var html = '<p class="qmeta">Question ' + (current + 1) + ' of ' + questions.length + '</p>';
+    html += '<p class="qtext">' + item.q + '</p>';
+    html += '<div class="options" id="opts">';
+    for (var i = 0; i < item.options.length; i++) {
+      html += '<button class="option" data-i="' + i + '"><span class="tag">' + letters[i] + '</span><span>' + item.options[i] + '</span></button>';
+    }
+    html += '</div>';
+    card.innerHTML = html;
+
+    var buttons = card.querySelectorAll('.option');
+    buttons.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var idx = parseInt(this.getAttribute('data-i'), 10);
+        selectAnswer(idx, buttons, item);
+      });
+    });
+  }
+
+  function selectAnswer(idx, buttons, item) {
+    answers[current] = idx;
+    buttons.forEach(function (btn) {
+      btn.disabled = true;
+      var i = parseInt(btn.getAttribute('data-i'), 10);
+      if (i === item.correct) btn.classList.add('is-correct');
+      else if (i === idx) btn.classList.add('is-wrong');
+    });
+    updateRack();
+
+    var explainBlock = document.createElement('div');
+    explainBlock.className = 'explain';
+    explainBlock.innerHTML = '<strong>' + (idx === item.correct ? 'Correct. ' : 'Not quite. ') + '</strong>' + item.explain;
+    card.appendChild(explainBlock);
+
+    var nextBtn = document.createElement('button');
+    nextBtn.className = 'nextbtn';
+    nextBtn.textContent = current === questions.length - 1 ? 'See results' : 'Next question';
+    nextBtn.addEventListener('click', function () {
+      current++;
+      if (current < questions.length) {
+        updateRack();
+        renderQuestion();
+      } else {
+        renderResults();
+      }
+    });
+    card.appendChild(nextBtn);
+  }
+
+  function tierMessage(score, total) {
+    var pct = score / total;
+    if (pct === 1) return "Full marks — that's a clean set of results.";
+    if (pct >= 0.7) return "Strong grasp of the topic, just a couple of gaps to revise.";
+    if (pct >= 0.5) return "A solid foundation — go back over the ones you missed.";
+    return "Worth another pass through the topic before the next test.";
+  }
+
+  function renderResults() {
+    current = questions.length;
+    updateRack();
+    var score = 0;
+    for (var i = 0; i < questions.length; i++) {
+      if (answers[i] === questions[i].correct) score++;
+    }
+    var html = '<div class="score-display">';
+    html += '<p class="qmeta">Quiz complete</p>';
+    html += '<p class="score-num">' + score + '<span class="score-frac">/' + questions.length + '</span></p>';
+    html += '<p class="score-tier">' + tierMessage(score, questions.length) + '</p>';
+    html += '</div>';
+    html += '<div class="review">';
+    for (var j = 0; j < questions.length; j++) {
+      var ok = answers[j] === questions[j].correct;
+      html += '<div class="review-item ' + (ok ? 'ok' : 'bad') + '">';
+      html += '<span class="mark">' + (ok ? '\u2713' : '\u2715') + '</span>';
+      html += '<span class="qline">Q' + (j + 1) + '. ' + questions[j].q + '</span>';
+      html += '</div>';
+    }
+    html += '</div>';
+    html += '<button class="primary" id="restart-btn">Retake quiz</button>';
+    card.innerHTML = html;
+    document.getElementById('restart-btn').addEventListener('click', function () {
+      answers = new Array(questions.length).fill(null);
+      current = -1;
+      updateRack();
+      renderStart();
+    });
+  }
+
+  buildRack();
+  renderStart();
+</script>
+</body>
+</html>
